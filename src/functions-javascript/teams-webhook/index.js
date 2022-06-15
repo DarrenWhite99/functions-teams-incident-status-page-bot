@@ -10,30 +10,12 @@ module.exports = async function (context, req, latestStatuses) {
     
     const latestStatus = latestStatuses[0];
     if (latestStatus) {
-        if (command === 'open' && latestStatus.type !== 'close') {
+        if (command === 'open' ) {
             return setBotResponse(context, "There's already an incident open.");
-        } else if ((command === 'close' || command === 'update') && latestStatus.type === 'close') {
+        } else if ((command === 'close' || command === 'update')) {
             return setBotResponse(context, "There is no open incident right now.");
         }
     }
-
-    const status = {
-        PartitionKey: 'status',
-        RowKey: getRowKey(id),
-        from: from.name,
-        timestamp: new Date(),
-        type: command,
-        text
-    };
-
-    // save to Table Storage
-    context.bindings.status = status;
-
-    // broadcast new status over Azure SignalR Service
-    context.bindings.signalRMessage = {
-        target: 'newStatus',
-        arguments: [ status ]
-    };
 
     // return message to Teams
     context.res.json({
@@ -41,10 +23,6 @@ module.exports = async function (context, req, latestStatuses) {
         "text": "Status received"
     });
 };
-
-function getRowKey(id) {
-    return pad(new Date('2099-12-31').getTime() - new Date().getTime(), 14) + ':' + id;
-}
 
 function pad(num, size) {
     var s = "00000000000000000000" + num;
